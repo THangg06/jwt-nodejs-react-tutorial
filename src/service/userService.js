@@ -1,5 +1,8 @@
 import bcrypt from 'bcryptjs';
 import mysql from 'mysql2';
+import bluebird from 'bluebird';
+
+
 
 
 const connection = mysql.createConnection({
@@ -29,18 +32,36 @@ export const userService = {
 
 
     },
-    getUserList: () => {
+    getUserList: async () => {
         let users = [];
-        connection.query(
-            'SELECT * FROM users'
-            ,
-            function (err, results, fields) {
-                if (err) {
-                    console.log(err);
-                }
-                console.log(results);
-            }
-        );
+        const connection = await mysql.createConnection({
+            host: 'localhost',
+            user: 'root',
+            database: 'jwt',
+
+        }).promise();
+        // connection.query(
+        //     'SELECT * FROM users'
+        //     ,
+        //     function (err, results, fields) {
+        //         if (err) {
+        //             console.log(err);
+        //             return users;
+        //         }
+        //         users = results;
+        //         return users;
+        //     }
+        // );
+
+        // query database
+        try {
+            const [rows, fields] = await connection.execute(
+                'SELECT * FROM `users`'
+            );
+            return rows;
+        } catch (error) {
+            console.log(error);
+        }
     }
 }
 
