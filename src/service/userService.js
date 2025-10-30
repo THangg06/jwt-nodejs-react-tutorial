@@ -5,11 +5,6 @@ import bluebird from 'bluebird';
 
 
 
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    database: 'jwt',
-});
 
 const salt = bcrypt.genSaltSync(10);
 export const userService = {
@@ -17,18 +12,23 @@ export const userService = {
         return bcrypt.hashSync(userPassword, salt)
     },
 
-    createNewUser: (email, password, username) => {
+    createNewUser: async (email, password, username) => {
         let hashedPass = userService.hashUserPassword(password);
-        connection.query(
-            'INSERT INTO users (email, password, username) VALUES (?, ?, ?)'
-            , [email, hashedPass, username],
-            function (err, results, fields) {
-                if (err) {
-                    console.log(err);
-                }
+        const connection = await mysql.createConnection({
+            host: 'localhost',
+            user: 'root',
+            database: 'jwt',
 
-            }
-        );
+        }).promise();
+        try {
+            const [rows, fields] = await connection.execute(
+                'INSERT INTO users (email, password, username) VALUES (?, ?, ?)'
+                , [email, hashedPass, username],
+            );
+
+        } catch (error) {
+            console.log(error);
+        }
 
 
     },
@@ -40,20 +40,6 @@ export const userService = {
             database: 'jwt',
 
         }).promise();
-        // connection.query(
-        //     'SELECT * FROM users'
-        //     ,
-        //     function (err, results, fields) {
-        //         if (err) {
-        //             console.log(err);
-        //             return users;
-        //         }
-        //         users = results;
-        //         return users;
-        //     }
-        // );
-
-        // query database
         try {
             const [rows, fields] = await connection.execute(
                 'SELECT * FROM `users`'
@@ -62,7 +48,56 @@ export const userService = {
         } catch (error) {
             console.log(error);
         }
-    }
-}
+    },
+    deleteUser: async (id) => {
+        const connection = await mysql.createConnection({
+            host: 'localhost',
+            user: 'root',
+            database: 'jwt',
+
+        }).promise();
+        try {
+            const [rows, fields] = await connection.execute(
+                'DELETE FROM `users` WHERE id = ?', [id]
+            );
+            return rows;
+        } catch (error) {
+            console.log(error);
+        }
+    },
+    updateUser: async (id, email, username) => {
+        const connection = await mysql.createConnection({
+            host: 'localhost',
+            user:
+                'root',
+            database: 'jwt',
+        }).promise();
+        try {
+            const [rows, fields] = await connection.execute(
+                'UPDATE  `users` set email = ?, username =?  WHERE id = ?', [email, username, id]
+            );
+            return rows;
+        } catch (error) {
+            console.log(error);
+        }
+    },
+    getUserByID: async (id) => {
+        const connection = await mysql.createConnection({
+            host: 'localhost',
+            user: 'root',
+            database: 'jwt',
+        }).promise();
+        try {
+            const [rows, fields] = await connection.execute(
+                'SELECT * FROM `users` WHERE id = ?', [id]
+            );
+            return rows;
+        } catch (error) {
+            console.log(error);
+        }
+
+    },
+
+};
 
 
